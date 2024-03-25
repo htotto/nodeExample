@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const sqlite3 = require('sqlite3').verbose();
+const dbSource = "node.db";
+const db = new sqlite3.Database(dbSource);
 
 const HHTP_Port = 8000;
 console.log("Listening on port: " + HHTP_Port);
@@ -29,22 +32,41 @@ app.get("/", (req, res, next) => {
 app.post("/fruit", (req, res, next) => {
     let strName = req.query.name;
     let strColor = req.query.color;
-    let objFruit = new Fruit(strName, strColor);
-    arrFruit.push(objFruit);
-    res.status(201).send(arrFruit);
+    let strCommand = "INSERT INTO tblFRUIT (name, color) VALUES (?,?)";
+    if(strName && strColor){
+        let arrParameters = [strName, strColor];
+        let objFruit = new Fruit(strName, strColor);
+        db.run(strCommand, arrParameters, function(error, result){
+            if(error){
+                res.status(400).json({error: error.message});
+            } else {
+                res.status(201).json({message: "success", fruit: objFruit})
+            }
+        })
+    } else {
+        res.status(400).json({error: "Not all parameters provided"})
+    }
+    
 });
 
 app.get("/fruit", (req, res, next) => {
     let strName = req.query.name;
     if(strName){
-        arrFruit.forEach(function(fruit){
-            if(fruit.name == strName){
-                res.status(200).send(fruit);
+        let strCommand = "SELECT * FROM tblFRUIT WHERE name = ?";
+        let arrParameters = [strName];
+        db.all(strCommand,arrParameters,(err, rows) => {
+            if(err){
+                res.status(400).json({error:err.message});
+            } else {
+                if(rows.length < 1){
+                    res.status(200).json({message: "error: not found"});
+                } else {
+                    res.status(200).json({message: "success", fruit:rows});
+                }
             }
         })
-        res.status(200).send({message: "Fruit not found"})
     } else {
-        res.status(200).send(arrFruit);
+        res.status(400).json({error: "No fruit name provided"});
     }
 });
 
@@ -65,11 +87,14 @@ app.delete("/fruit", (req, res, next) => {
 });
 
 app.get("/hello", (req, res, next) => {
-    let strFruit = req.query.fruit;
-    console.log("Routed to hello route");
-    console.log(strFruit);
-
-    res.status(200).send("Hello " + strFruit);
+    let strCommand = 'SELECT * FROM tblFRUIT';
+    db.all(strCommand, (err, rows) => {
+        if(err){
+            res.status(400).json({error:err.message});
+        } else {
+            res.status(200).json({message: "success", fruit:rows});
+        }
+    });
 });
 
 app.listen(HHTP_Port);
