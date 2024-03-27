@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const {v4:uuidv4} = require('uuid');
 const sqlite3 = require('sqlite3').verbose();
 const dbSource = "node.db";
 const db = new sqlite3.Database(dbSource);
@@ -16,6 +17,7 @@ class Fruit {
     }
 }
 
+let strID = uuidv4();
 var arrFruit = [];
 let objBanana = new Fruit('banana','yellow')
 let objApple = new Fruit('apple','red')
@@ -49,8 +51,8 @@ app.post("/fruit", (req, res, next) => {
     
 });
 
-app.get("/fruit", (req, res, next) => {
-    let strName = req.query.name;
+app.get("/fruit/:name", (req, res, next) => {
+    let strName = req.params.name;
     if(strName){
         let strCommand = "SELECT * FROM tblFRUIT WHERE name = ?";
         let arrParameters = [strName];
