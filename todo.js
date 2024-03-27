@@ -63,5 +63,55 @@ app.get("/task/:taskID", (req, res, next) => {
     }
 });
 
+app.get("/task", (req, res, next) => {
+    let strCommand = "SELECT * FROM tblTasks";
+    db.all(strCommand,(err, rows) => {
+        if(err){
+            res.status(400).json({error: err.message});
+        } else {
+            res.status(200).send(rows);
+        }
+    })
+});
+
+app.delete("/task:taskID", (req, res, next) => {
+    let strTaskID = req.params.taskID;
+    if(strTaskID){
+        let strCommand = "DELETE FROM tblTasks WHERE TaskID = ?";
+        let arrParameters = [strTaskID];
+        db.run(strCommand, arrParameters, function(error, result){
+            if(error){
+                res.status(400).json({error: error.message});
+            } else {
+                res.status(200).json({message: "success"})
+            }
+        })
+    } else {
+        res.status(400).json({error: "No task id provided"})
+    }
+});
+
+app.put("/task:taskID", (req, res, next) => {
+    let strTaskID = req.params.taskID;
+    let strTaskName = req.query.taskName;
+    let strDueDate = req.query.dueDate;
+    let strLocation = req.query.location;
+    let strInstructions = req.query.instructions;
+    let strStatus = req.query.status;
+    if(strTaskID && strTaskName && strDueDate && strLocation && strInstructions && strStatus){
+        let strCommand = "UPDATE tblTasks SET TaskName = ?, DueDate = ?, Location = ?, Instructions = ?, Status = ? WHERE TaskID = ?";
+        let arrParameters = [strTaskName, strDueDate, strLocation, strInstructions, strStatus, strTaskID];
+        db.run(strCommand, arrParameters, function(error, result){
+            if(error){
+                res.status(400).json({error: error.message});
+            } else {
+                res.status(200).json({message: "success"})
+            }
+        })
+    } else {
+        res.status(400).json({error: "Not all parameters provided"})
+    }
+});
+
 
 app.listen(HHTP_Port);
