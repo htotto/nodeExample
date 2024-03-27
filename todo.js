@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const {v4:uuidv4} = require('uuid');
 const sqlite3 = require('sqlite3').verbose();
-const dbSource = "node.db";
+const dbSource = "todo.db";
 const db = new sqlite3.Database(dbSource);
 
 const HHTP_Port = 8000;
