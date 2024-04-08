@@ -1,25 +1,339 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todo App</title>
-    <style>
-        /* Add your CSS styles here */
-    </style>
+    <link rel="stylesheet" href="https://bootswatch.com/5/sketchy/bootstrap.min.css">
 </head>
-<body>
-    <h1>Todo App</h1>
-    
-    <form>
-        <input type="text" placeholder="Enter a task">
-        <button type="submit">Add</button>
-    </form>
-    
-    <ul>
-        <!-- Todo items will be dynamically added here -->
-    </ul>
-    
-    <script>
-        // Add your JavaScript code here
-    </script>
+<body class="bg-dark">
+<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <!-- getTasks -->
+    <div class="card col-12 col-md-8 col-lg-6 mb-3" id="getTasks">
+        <div class="card-header bg-info text-white">
+            <h2 class="mb-0">Tasks</h2>
+        </div>
+        <div class="card-body">
+            <div id="todo-list" class="mb-3">
+                <!-- Task cards will be dynamically inserted here -->
+            </div>
+            <button class="btn btn-primary w-100" onclick="showAddTaskForm()">Add a new Task</button>
+        </div>
+    </div>
+    <!-- divEditTask -->
+    <div class="card col-12 col-md-8 col-lg-6" id="divEditTask" style="display:none">
+        <div class="card-header bg-info text-white">
+            <h2 class="mb-0">Edit Task</h2>
+        </div>
+        <div class="card-body">
+            <form id="edit-form">
+                <div class="mb-3">
+                    <input type="hidden" id="editTaskId">
+                    <label for="editTaskName" class="form-label">Task Name</label>
+                    <input type="text" id="editTaskName" class="form-control" placeholder="Enter Task Name">
+                </div>
+                <div class="mb-3">
+                    <label for="editDueDate" class="form-label">Due Date</label>
+                    <input type="date" id="editDueDate" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="editLocation" class="form-label">Location</label>
+                    <input type="text" id="editLocation" class="form-control" placeholder="Enter Location">
+                </div>
+                <div class="mb-3">
+                    <label for="editInstructions" class="form-label">Instructions</label>
+                    <textarea id="editInstructions" class="form-control" rows="3" placeholder="Enter Instructions"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="editStatus" class="form-label">Status</label>
+                    <select id="editStatus" class="form-select">
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-warning w-100">Save Changes</button>
+                <button type="button" class="btn btn-secondary w-100 mt-2" onclick="backToTasks()">Back to Tasks</button>
+            </form>
+        </div>
+    </div>
+    <!-- divTodo -->
+    <div class="card col-12 col-md-8 col-lg-6" id="divTodo" style="display:none">
+        <div class="card-header bg-info text-white">
+            <h2 class="mb-0">Add New Task</h2>
+        </div>
+        <div class="card-body">
+            <form id="todo-form">
+                <div class="mb-3">
+                    <label for="txttaskName" class="form-label">Task Name</label>
+                    <input type="text" id="txttaskName" class="form-control" placeholder="Enter Task Name">
+                </div>
+                <div class="mb-3">
+                    <label for="txtdueDate" class="form-label">Due Date</label>
+                    <input type="date" id="txtdueDate" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="txtlocation" class="form-label">Location</label>
+                    <input type="text" id="txtlocation" class="form-control" placeholder="Enter Location">
+                </div>
+                <div class="mb-3">
+                    <label for="txtinstructions" class="form-label">Instructions</label>
+                    <textarea id="txtinstructions" class="form-control" rows="3" placeholder="Enter Instructions"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="selstatus" class="form-label">Status</label>
+                    <select id="selstatus" class="form-select">
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Add Task</button>
+                <button type="button" class="btn btn-secondary w-100 mt-2" onclick="backToTasks()">Back to Tasks</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+        fetchTasks(); // Fetch tasks when the page loads
+    });
+
+    // Show the "Add New Task" form
+    function showAddTaskForm() {
+        $('#getTasks').stop().slideUp(function() {
+            $('#divTodo').stop().slideDown();
+        });
+    }
+
+    // Show the "Edit Task" form
+    function showEditTaskForm() {
+        $('#getTasks').stop().slideUp(function() {
+            $('#divEditTask').stop().slideDown();
+        });
+    }
+
+    // Return to the "Tasks" view from either form
+    function backToTasks() {
+        $('#divTodo, #divEditTask').stop().slideUp().promise().done(function() {
+            $('#getTasks').stop().slideDown();
+        });
+    }
+
+    function getStatusText(status, dueDate) {
+        if (status === "Pending" && isPastDue(dueDate)) {
+            return "Past Due";
+        }
+        return status;
+    }
+
+    function getStatusBadge(status, dueDate) {
+        if (status === "Completed") {
+            return "bg-success";
+        } else if (status === "Pending" && isPastDue(dueDate)) {
+            return "bg-danger"; // Use a different badge color for past due tasks if desired
+        }
+        return "bg-secondary";
+    }
+
+    // Function to check if the due date is in the past
+    function isPastDue(dueDate) {
+        const today = new Date();
+        const due = new Date(dueDate);
+
+        today.setHours(0, 0, 0, 0);
+        due.setHours(0, 0, 0, 0);
+
+        return due < today;
+    }
+
+
+    function fetchTasks() {
+        $('#todo-list').empty(); // Clear the existing tasks before fetching new ones
+
+        $.get('http://localhost:8000/task', function(data) {
+            if(data.error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    html: "<p>" + data.error + "</p>"
+                });
+                $('#todo-list').append("<p>Error pulling from database!</p>");
+            } else if(data.length === 0) {
+                $('#todo-list').append("<p>No tasks to do!</p>");
+            } else {
+                data.forEach(function(task) {
+                    $('#todo-list').append(`
+                        <div class='mb-4 card shadow-sm' id='${task.TaskID}'>
+                            <div class='card-body'>
+                                <div class='d-flex justify-content-between'>
+                                    <h5 class='card-title'>${task.TaskName}</h5>
+                                    <span class='badge rounded-pill ${getStatusBadge(task.Status, task.DueDate)} d-flex align-items-center justify-content-center'>
+                                        ${getStatusText(task.Status, task.DueDate)}
+                                    </span>
+                                </div>
+                                <p class='card-text'><small class='text-muted'><i class='bi bi-calendar2-date'></i> Due: ${task.DueDate}</small></p>
+                                <p class='card-text'><small class='text-muted'><i class="bi bi-geo-alt"></i> Location: ${task.Location}</small></p>
+                                <p class='card-text'>Instruction: ${task.Instructions}</p>
+                                <button type='button' class='btn btn-warning edit-task' data-taskid='${task.TaskID}' title='Edit Task'><i class="bi bi-pencil-square"></i> Edit</button>
+                                <button type='button' class='btn btn-danger delete-task' data-taskid='${task.TaskID}' title='Delete Task'><i class="bi bi-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+        });
+    }
+
+    // Delete task
+    $('body').on('click', '.delete-task', function() {
+        var taskId = $(this).data('taskid');
+        console.log("Deleting task with ID: ", taskId);
+        var $this = $(this);
+
+        $.ajax({
+            url: 'http://localhost:8000/task/' + taskId, // Append the taskID in the URL
+            type: 'DELETE',
+            contentType: 'application/json', // It's a good practice to include this even if you don't send a body
+            success: function(result) {
+                // Use .closest() to find the nearest ancestor that is a .card and remove it
+                fetchTasks(); // Fetch tasks again to display the updated list
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Task Deleted',
+                    html:"<p>Task deleted successfully</p>"
+                });
+            },
+            error: function(error) {
+                console.error("Error deleting task: ", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    html:"<p>" +error.responseJSON.message + "</p>"
+                });
+            }
+        });
+    });
+
+    $('body').on('click', '.edit-task', function() {
+        var taskId = $(this).data('taskid');
+        console.log("Editing task with ID: ", taskId);
+        $.ajax({
+            url: 'http://localhost:8000/task/' + taskId,
+            type: 'GET',
+            success: function(task) {
+                var taskDetails = task[0]; 
+
+                // Populate the "Edit Task" form fields with the fetched information
+                $('#editTaskId').val(taskId);
+                $('#editTaskName').val(taskDetails.TaskName);
+                $('#editDueDate').val(taskDetails.DueDate); 
+                $('#editLocation').val(taskDetails.Location);
+                $('#editInstructions').val(taskDetails.Instructions);
+                $('#editStatus').val(taskDetails.Status === "Completed" ? "Completed" : "Pending");
+
+                // Show the "Edit Task" form
+                showEditTaskForm();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching task details: ", error);
+                
+            }
+        });
+    });
+
+
+// Handle the form submission for editing tasks
+    $('#edit-form').on('submit', function(e) {
+        e.preventDefault();
+
+        var taskId = $('#editTaskId').val();
+        // Collect updated task details from form
+        $.ajax({
+            url: 'http://localhost:8000/task/' + taskId,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                taskName: $('#editTaskName').val(),
+                dueDate: $('#editDueDate').val(),
+                location: $('#editLocation').val(),
+                instructions: $('#editInstructions').val(),
+                status: $('#editStatus').val()
+            }),
+            success: function(response) {
+                // Handle success
+                fetchTasks(); // Refresh the task list
+                Swal.fire('Success', 'Task updated successfully', 'success');
+                backToTasks(); // Slide back to the tasks view
+            },
+            error: function(xhr, status, error) {
+                // Handle error
+                Swal.fire('Error', 'Error updating task: ' + xhr.responseText, 'error');
+            }
+        });
+    });
+
+
+    // Add task
+    $('#todo-form').on('submit', function(e) {
+        e.preventDefault();
+
+        var taskName = $('#txttaskName').val();
+        var dueDate = $('#txtdueDate').val();
+        var location = $('#txtlocation').val();
+        var instructions = $('#txtinstructions').val();
+        var status = $('#selstatus').val();
+
+        // Check if any of the fields are empty
+        if (!taskName || !dueDate || !location || !instructions) {
+            // Show an error message to the user
+            Swal.fire({
+                icon: 'error',
+                title: 'Missing Information',
+                html: '<p>Please fill out all the fields before adding a task.</p>'
+            });
+            return; // Exit the function to prevent the AJAX call
+        }
+
+    $.ajax({
+        url: 'http://localhost:8000/task',
+        type: 'POST',
+        data: JSON.stringify({
+            TaskName: taskName,
+            DueDate: dueDate,
+            Location: location,
+            Instructions: instructions,
+            Status: status
+        }),
+        contentType: 'application/json',
+        success: function(data) {
+            $('#txttodo-list').append('<li class="list-group-item">' + taskName + '</li>');
+            fetchTasks(); // Fetch tasks again to display the new task
+            $('#txttaskName').val('');
+            $('#txtdueDate').val('');
+            $('#txtlocation').val('');
+            $('#txtinstructions').val('');
+            $('#selstatus').val('Pending');
+            Swal.fire({
+                icon: 'success',
+                title: 'Task Added',
+                html:"<p>Task added successfully</p>"
+            })
+        },
+        error: function(error) {
+            console.error("Error adding task: ", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                html:"<p>" +error.responseJSON.message + "</p>"
+            })
+        }
+    });
+});
+
+</script>
 </body>
 </html>

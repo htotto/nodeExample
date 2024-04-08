@@ -9,6 +9,7 @@ const HHTP_Port = 8000;
 console.log("Listening on port: " + HHTP_Port);
 var app = express();
 app.use(cors());
+app.use(express.json());
 
 class Tasks {
     constructor(strTaskName, strDueDate, strLocation, strInstructions, strStatus, strTaskID) {
@@ -24,11 +25,11 @@ class Tasks {
 let strID = uuidv4();
 
 app.post("/task", (req, res, next) => {
-    let strTaskName = req.query.taskName;
-    let strDueDate = req.query.dueDate;
-    let strLocation = req.query.location;
-    let strInstructions = req.query.instructions;
-    let strStatus = req.query.status;
+    let strTaskName = req.body.TaskName;
+    let strDueDate = req.body.DueDate;
+    let strLocation = req.body.Location;
+    let strInstructions = req.body.Instructions;
+    let strStatus = req.body.Status;
     let strTaskID = uuidv4();
     let strCommand = "INSERT INTO tblTasks (TaskName, DueDate, Location, Instructions, Status, TaskID) VALUES (?,?,?,?,?,?)";
     if(strTaskName && strDueDate && strLocation && strInstructions && strStatus){
@@ -74,12 +75,13 @@ app.get("/task", (req, res, next) => {
     })
 });
 
-app.delete("/task:taskID", (req, res, next) => {
+app.delete("/task/:taskID", (req, res, next) => {
     let strTaskID = req.params.taskID;
+    console.log(strTaskID);
     if(strTaskID){
         let strCommand = "DELETE FROM tblTasks WHERE TaskID = ?";
         let arrParameters = [strTaskID];
-        db.run(strCommand, arrParameters, function(error, result){
+        db.run(strCommand, arrParameters, function(error){
             if(error){
                 res.status(400).json({error: error.message});
             } else {
@@ -91,13 +93,13 @@ app.delete("/task:taskID", (req, res, next) => {
     }
 });
 
-app.put("/task:taskID", (req, res, next) => {
+app.put("/task/:taskID", (req, res, next) => {
     let strTaskID = req.params.taskID;
-    let strTaskName = req.query.taskName;
-    let strDueDate = req.query.dueDate;
-    let strLocation = req.query.location;
-    let strInstructions = req.query.instructions;
-    let strStatus = req.query.status;
+    let strTaskName = req.body.taskName;
+    let strDueDate = req.body.dueDate;
+    let strLocation = req.body.location;
+    let strInstructions = req.body.instructions;
+    let strStatus = req.body.status;
     if(strTaskID && strTaskName && strDueDate && strLocation && strInstructions && strStatus){
         let strCommand = "UPDATE tblTasks SET TaskName = ?, DueDate = ?, Location = ?, Instructions = ?, Status = ? WHERE TaskID = ?";
         let arrParameters = [strTaskName, strDueDate, strLocation, strInstructions, strStatus, strTaskID];
