@@ -98,7 +98,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        fetchTasks(); // Fetch tasks when the page loads
+        fetchTasks();
     });
 
     // Show the "Add New Task" form
@@ -116,6 +116,7 @@
     }
 
     // Return to the "Tasks" view from either form
+    // Was having issue with the slideUp() function not working properly added.promise().done() to fix it honestly have no clue why it works now
     function backToTasks() {
         $('#divTodo, #divEditTask').stop().slideUp().promise().done(function() {
             $('#getTasks').stop().slideDown();
@@ -133,7 +134,7 @@
         if (status === "Completed") {
             return "bg-success";
         } else if (status === "Pending" && isPastDue(dueDate)) {
-            return "bg-danger"; // Use a different badge color for past due tasks if desired
+            return "bg-danger"; 
         }
         return "bg-secondary";
     }
@@ -151,7 +152,7 @@
 
 
     function fetchTasks() {
-        $('#todo-list').empty(); // Clear the existing tasks before fetching new ones
+        $('#todo-list').empty();
 
         $.get('http://localhost:8000/task', function(data) {
             if(data.error) {
@@ -194,12 +195,11 @@
         var $this = $(this);
 
         $.ajax({
-            url: 'http://localhost:8000/task/' + taskId, // Append the taskID in the URL
+            url: 'http://localhost:8000/task/' + taskId, 
             type: 'DELETE',
-            contentType: 'application/json', // It's a good practice to include this even if you don't send a body
+            contentType: 'application/json', 
             success: function(result) {
-                // Use .closest() to find the nearest ancestor that is a .card and remove it
-                fetchTasks(); // Fetch tasks again to display the updated list
+                fetchTasks(); 
                 
                 Swal.fire({
                     icon: 'success',
@@ -246,7 +246,7 @@
     });
 
 
-// Handle the form submission for editing tasks
+    // Handle the form submission for editing tasks
     $('#edit-form').on('submit', function(e) {
         e.preventDefault();
 
@@ -265,9 +265,9 @@
             }),
             success: function(response) {
                 // Handle success
-                fetchTasks(); // Refresh the task list
+                fetchTasks(); 
                 Swal.fire('Success', 'Task updated successfully', 'success');
-                backToTasks(); // Slide back to the tasks view
+                backToTasks(); 
             },
             error: function(xhr, status, error) {
                 // Handle error
@@ -295,7 +295,7 @@
                 title: 'Missing Information',
                 html: '<p>Please fill out all the fields before adding a task.</p>'
             });
-            return; // Exit the function to prevent the AJAX call
+            return;
         }
 
     $.ajax({
@@ -311,7 +311,7 @@
         contentType: 'application/json',
         success: function(data) {
             $('#txttodo-list').append('<li class="list-group-item">' + taskName + '</li>');
-            fetchTasks(); // Fetch tasks again to display the new task
+            fetchTasks(); 
             $('#txttaskName').val('');
             $('#txtdueDate').val('');
             $('#txtlocation').val('');
